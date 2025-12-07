@@ -20,11 +20,15 @@ app.use(cookieParser())
 //routes import
 import userRouter from './routes/user.routes.js'
 import commentRouter from './routes/comment.routes.js'
+import dashboardRouter from './routes/dashboard.routes.js'
+import likeRouter from './routes/like.routes.js'
 
 //routes declaration
 //base url - /api/v1/users
 //orifinal url - /api/v1/users/register
 app.use('/api/v1/users', userRouter)
-app.use('api/v1/comments', commentRouter)
+app.use('/api/v1/comments', commentRouter)
+app.use('/api/v1/dashboard', dashboardRouter)
+app.use('/api/v1/likes', likeRouter)
 
 export default app
