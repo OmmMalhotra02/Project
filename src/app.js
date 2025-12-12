@@ -25,6 +25,7 @@ import likeRouter from './routes/like.routes.js'
 import playlistRouter from './routes/playlist.routes.js'
 import tweetRouter from './routes/tweet.routes.js'
 import healthcheckRouter from "./routes/healthcheck.routes.js"
+import videoRouter from "./routes/video.routes.js"
 
 //routes declaration
 //base url - /api/v1/users
@@ -36,5 +37,6 @@ app.use('/api/v1/dashboard', dashboardRouter)
 app.use('/api/v1/likes', likeRouter)
 app.use("/api/v1/playlist", playlistRouter)
 app.use("/api/v1/tweets", tweetRouter)
+app.use("/api/v1/videos", videoRouter)
 
 export default app

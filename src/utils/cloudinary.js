@@ -21,27 +21,37 @@ const uploadOnCloudinary = async (localFilePath) => {
     }
 }
 
-const deleteOldImage = async (imagePath) => {
+const deleteOldAsset = async (fileUrl) => {
     try {
-        //get Public ID from URL
-        const parts = imagePath.split('/');
-        const filename = parts[parts.length - 1]; 
-        const publicId = filename.split('.')[0];
-        // console.log(publicId);
+        if (!fileUrl) return false;
 
-        const result = await cloudinary.uploader.destroy(publicId)
-        console.log('Deletion result:', result);
-        if (result.result === 'ok') {
-            console.log(`Image with public ID ${imagePath} deleted successfully.`);
+        // Extract filename
+        const parts = fileUrl.split('/');
+        const filename = parts.pop(); // filename.ext
+        const publicId = filename.split('.')[0]; // filename only
+
+        // Detect resource type
+        const resourceType = fileUrl.includes("/video/") ? "video" : "image";
+
+        const result = await cloudinary.uploader.destroy(publicId, {
+            resource_type: resourceType,
+        });
+
+        console.log("Deletion result:", result);
+
+        if (result.result === "ok") {
+            console.log(`Deleted ${resourceType}: ${publicId}`);
             return true;
-        } else {
-            console.error(`Failed to delete image with public ID ${imagePath}. Result:`, result.result);
-            return false;
         }
+
+        console.error(`Failed to delete ${resourceType}: ${publicId}`);
+        return false;
+
     } catch (error) {
-        console.log("Avatar deletion failed", error);
+        console.error("Cloudinary deletion failed:", error);
         return false;
     }
-}
+};
 
-export {uploadOnCloudinary, deleteOldImage}
+
+export {uploadOnCloudinary, deleteOldAsset}

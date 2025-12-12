@@ -1,7 +1,7 @@
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../models/user.models.js";
-import { deleteOldImage, uploadOnCloudinary } from "../utils/cloudinary.js";
+import { deleteOldAsset, uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from 'jsonwebtoken'
 import mongoose from "mongoose";
@@ -327,7 +327,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     
     const oldAvatar = user?.avatar
 
-    const result = deleteOldImage(oldAvatar)
+    const result = deleteOldAsset(oldAvatar)
 
     if (!result) {
         throw new ApiError(400, "Avatar file deletion failed")
@@ -360,7 +360,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     const updatedCoverImageLocalPath = req.file?.path
 
     if (!updatedCoverImageLocalPath) {
-        throw new ApiError(400, "Cover image file missing")
+        throw new ApiError(501, "Cover image file missing")
     }
 
     const coverImage = await uploadOnCloudinary(updatedCoverImageLocalPath)
