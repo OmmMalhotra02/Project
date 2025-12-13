@@ -185,20 +185,106 @@ const publishAVideo = asyncHandler(async (req, res) => {
 
 const getVideoById = asyncHandler(async (req, res) => {
     const { videoId } = req.params
+    const userId = req.user?._id
     //TODO: get video by id
 
     if (!videoId) {
         throw new ApiError("Video Id not received")
     }
 
-    const video = await Video.findById(videoId)
+    const video = await Video.aggregate([
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(videoId)
+            }
+        },
+        // owner lookup
+        {
+            $lookup: {
+                from: "users",
+                localField: "owner",
+                foreignField: "_id",
+                as: "ownerDetails"
+            }
+        },
+        { $unwind: "$ownerDetails" },
+        // likes lookup
+        {
+            $lookup: {
+                from: "likes",
+                let: { videoId: "$_id" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $eq: ["$video", "$$videoId"] },
+                                    { $eq: ["$likedBy", new mongoose.Types.ObjectId(userId)] }
+                                ]
+                            }
+                        }
+                    }
+                ],
+                as: "userLike"
+            }
+        },
+        {
+            $lookup: {
+                from: "likes",
+                let: { videoId: "$_id" },
+                pipeline: [
+                    { $match: { $expr: { $eq: ["$video", "$$videoId"] } } }
+                ],
+                as: "allLikes"
+            }
+        },
+        {
+            $lookup: {
+                from: "subscriptions",
+                let: { channelId: "$ownerDetails._id" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $eq: ["$channel", "$$channelId"] },
+                                    { $eq: ["$subscriber", new mongoose.Types.ObjectId(userId)] }
+                                ]
+                            }
+                        }
+                    }
+                ],
+                as: "userSubscription"
+            }
+        },
+        {
+            $project: {
+                videoFile: 1,
+                thumbnail: 1,
+                title: 1,
+                description: 1,
+                duration: 1,
+                views: 1,
+                createdAt: 1,
+
+                owner: "$ownerDetails._id",
+                ownerUsername: "$ownerDetails.username",
+                ownerFullName: "$ownerDetails.fullName",
+                ownerAvatar: "$ownerDetails.avatar",
+
+                likesCount: { $size: "$allLikes" },
+                isLiked: { $gt: [{ $size: "$userLike" }, 0] },
+                isSubscribed: { $gt: [{ $size: "$userSubscription" }, 0] }
+            }
+        }
+    ])
 
     return res
         .status(200)
         .json(
             new ApiResponse(
                 200,
-                video,
+                video[0],
                 "Video fetched succesfully via videoId"
             )
         )

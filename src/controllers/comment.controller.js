@@ -6,13 +6,13 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 const getVideoComments = asyncHandler(async (req, res) => {
     const { videoId } = req.params
-    const { page = 2, limit = 10 } = req.query
+    const { page = 1, limit = 10 } = req.query
 
     if (!isValidObjectId(videoId)) {
         throw new ApiError(400, "Invalid Video Id")
     }
 
-    const videoObjectId = mongoose.Types.ObjectId(videoId)
+    const videoObjectId = new mongoose.Types.ObjectId(videoId)
 
     const comments = await Comment.aggregate([
         {
@@ -22,57 +22,46 @@ const getVideoComments = asyncHandler(async (req, res) => {
         },
         {
             $lookup: {
-                from: "videos",
-                foreignField: "_id",
-                localField: "video",
-                as: "CommentedVideo"
-            }
-        },
-        {
-            $lookup: {
                 from: "users",
                 foreignField: "_id",
                 localField: "owner",
-                as: "CommentOwner"
-            },
-            $project: {
-                username: 1,
-                fullName: 1,
-                avatar: 1
+                as: "ownerDetails"
             }
         },
+        { $unwind: "$ownerDetails" },
         {
             $project: {
+                _id: 1,
                 content: 1,
+                createdAt: 1,
                 owner: {
-                    $arrayElemAt: ["$CommentOwner", 0]
-                },
-                video: {
-                    $arrayElemAt: ["$CommentedVideo", 0]
-                },
-                createdAt: 1
+                    _id: "$ownerDetails._id",
+                    fullName: "$ownerDetails.fullName",
+                    avatar: "$ownerDetails.avatar",
+                    username: "$ownerDetails.username"
+                }
             }
         },
-        {
-            $skip: (page - 1) * limit
+        { 
+            $skip: (page - 1) * parseInt(limit) 
         },
-        {
-            $limit: limit
+        { 
+            $limit: parseInt(limit) 
         }
     ])
 
-    console.log("Comments", comments);
+    // console.log("Comments", comments);
 
-    if (!comments.length) {
-        throw new ApiError(404, "Comments doesn't exist")
-    }
+    // if (!comments.length) {
+    //     throw new ApiError(404, "Comments doesn't exist")
+    // }
 
     return res
         .status(200)
         .json(
             new ApiResponse(
                 200,
-                comments[0],
+                comments || [],
                 "Comments fetched successfully"
             )
         )
@@ -97,19 +86,21 @@ const addComment = asyncHandler(async (req, res) => {
     const addedComment = await Comment.create({
         content,
         video: videoId,
-        owner: req.user
+        owner: req.user?._id
     })
 
     if (!addedComment) {
         throw new ApiError(400, "Something went wrong while adding comment")
     }
 
+    await addedComment.populate("owner", "fullName avatar username");
+
     return res
         .status(200)
         .json(
             new ApiResponse(
                 200,
-                addComment,
+                addedComment,
                 "Comment added successfully"
             )
         )
@@ -169,19 +160,19 @@ const deleteComment = asyncHandler(async (req, res) => {
         }
     )
 
-    if(!deletedCommentObject) {
+    if (!deletedCommentObject) {
         throw new ApiError(500, "Something went wrong while deleting the comment");
     }
 
     return res
-    .status(200)
-    .json(
-        new ApiResponse(
-            200,
-            deletedCommentObject,
-            "Comment deleted successfully"
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                deletedCommentObject,
+                "Comment deleted successfully"
+            )
         )
-    )
 })
 
 export { getVideoComments, addComment, updateComment, deleteComment }
