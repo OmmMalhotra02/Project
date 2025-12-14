@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
     getSubscribedChannels,
     getUserChannelSubscribers,
+    getVideosForChannel,
     toggleSubscription,
 } from "../controllers/subscription.controller.js"
 import {verifyJWT} from "../middlewares/auth.middleware.js"
@@ -15,5 +16,6 @@ router
     .post(toggleSubscription);
 
 router.route("/u/:subscriberId").get(getUserChannelSubscribers);
+router.route("/s/:channelId").get(getVideosForChannel)
 
 export default router

@@ -1,9 +1,9 @@
-import mongoose, { isValidObjectId } from "mongoose"
-import { User } from "../models/user.models.js"
+import { Video } from "../models/video.models.js"
 import { Subscription } from "../models/subscription.models.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
+import mongoose from "mongoose"
 
 
 const toggleSubscription = asyncHandler(async (req, res) => {
@@ -88,7 +88,7 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
 
 // controller to return channel list to which user has subscribed
 const getSubscribedChannels = asyncHandler(async (req, res) => {
-    const { subscriberId } = req.params
+    const { channelId: subscriberId } = req.params
 
     if (!subscriberId) {
         throw new ApiError(400, "no subscriber's id found")
@@ -122,8 +122,67 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
         ))
 })
 
+const getVideosForChannel = asyncHandler(async (req, res) => {
+    const {channelId} = req.params
+
+    if (!channelId) {
+        throw new ApiError(400, "channel id not found")
+    }
+
+    // const videos = await Video.find({
+    //     owner: new mongoose.Types.ObjectId(channelId)
+    // })
+
+    const videos = await Video.aggregate([
+        {
+            $match: {
+                owner: new mongoose.Types.ObjectId(channelId)
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "owner",
+                foreignField: "_id",
+                as: "videoOwner"
+            }
+        },
+        {
+            $unwind: "$videoOwner"
+        },
+        {
+            $project: {
+                videoFile: 1,
+                thumbnail: 1,
+                title: 1,
+                decription: 1,
+                duration: 1,
+                views: 1,
+                "videoOwner.username": 1,
+                "videoOwner.avatar": 1,
+                "videoOwner.fullName": 1
+            }
+        }
+    ])
+
+    if (videos.length === 0) {
+        return res.status(200).json(new ApiResponse(200, "No videos found for this channel"))
+    }
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200, 
+            { videos }, 
+            "Videos fetched successfully"
+        )
+    )
+})
+
 export {
     toggleSubscription,
     getUserChannelSubscribers,
-    getSubscribedChannels
+    getSubscribedChannels,
+    getVideosForChannel
 }
