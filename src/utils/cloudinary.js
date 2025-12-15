@@ -37,10 +37,10 @@ const deleteOldAsset = async (fileUrl) => {
             resource_type: resourceType,
         });
 
-        console.log("Deletion result:", result);
+        // console.log("Deletion result:", result);
 
         if (result.result === "ok") {
-            console.log(`Deleted ${resourceType}: ${publicId}`);
+            // console.log(`Deleted ${resourceType}: ${publicId}`);
             return true;
         }
 

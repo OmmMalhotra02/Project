@@ -54,6 +54,10 @@ app.use("/api/v1/tweets", tweetRouter)
 app.use("/api/v1/videos", videoRouter)
 app.use("/api/v1/subscriptions", subscriptionRouter)
 
+app.get('/', (req, res) => {
+res.send('Servers survived 😈 Vision Stream Backend is live and ready. No bugs detected… yet 🐛');
+});
+
 // Global Error Handling Middleware
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500

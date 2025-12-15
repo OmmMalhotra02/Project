@@ -2,22 +2,21 @@ import connectDB from "./db/index.js";
 import dotenv from 'dotenv'
 import app from "./app.js";
 
-dotenv.config({path: './.env'})
+dotenv.config({ path: './.env' })
 
-connectDB()
-.then(() => {
-    // app.on((err) => {
-    //     console.log("DB connected, error before app listen ", err);
-    //     throw err;
-    // })
-    app.listen(process.env.PORT || 8000, () => {
-        console.log("Server running at port ", process.env.PORT);
-        
-    })
-})
-.catch((err) => {
-    console.log("connectDB called, still connection failed ", err);
-})
+if (process.env.NODE_ENV !== 'production') {
+    connectDB()
+        .then(() => {
+            app.listen(process.env.PORT || 8000, () => {
+                console.log("Server running at port ", process.env.PORT);
+            })
+        })
+        .catch((err) => {
+            console.log("connectDB called, still connection failed ", err);
+        })
+}
+
+export default app
 
 // APPROACH 1 - DB connectiona dn app initilization in one file, all on server start
 /*
