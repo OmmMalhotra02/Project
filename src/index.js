@@ -4,16 +4,16 @@ import app from "./app.js";
 
 dotenv.config({ path: './.env' })
 
+try {
+    await connectDB();
+} catch (err) {
+    console.error("Database connection failed:", err);
+}
+
 if (process.env.NODE_ENV !== 'production') {
-    connectDB()
-        .then(() => {
-            app.listen(process.env.PORT || 8000, () => {
-                console.log("Server running at port ", process.env.PORT);
-            })
-        })
-        .catch((err) => {
-            console.log("connectDB called, still connection failed ", err);
-        })
+    app.listen(process.env.PORT || 8000, () => {
+        console.log("Server running at port ", process.env.PORT);
+    })
 }
 
 export default app
