@@ -6,7 +6,7 @@ const app = express()
 
 const allowedOrigins = [
   'https://vision-stream.vercel.app', // production frontend
-  /http:\/\/localhost:\d+/    // local dev            
+  /^http:\/\/localhost:(5173|5174)$/    // local dev            
 ];
 
 app.use(cors({
@@ -21,6 +21,11 @@ app.use(cors({
   },
   credentials: true
 }));
+
+app.use((req, res, next) => {
+  res.header("Vary", "Origin");
+  next();
+});
 
 app.use(express.json({limit: "16kb"}))
 
