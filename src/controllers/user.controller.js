@@ -68,13 +68,13 @@ const registerUser = asyncHandler(async (req, res) => {
     //accessing files - multer middleware has included few more keys in req object
     // console.log("request.files object - ", req.files);
 
-    const avatarLocalPath = req.files?.avatar[0]?.path;
+    const avatarLocalPath = req.files?.avatar[0]?.buffer;
     // const coverImageLocalPath = req.files?.coverImage[0]?.path
 
     let coverImageLocalPath;
 
     if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
-        coverImageLocalPath = req.files.coverImage[0].path
+        coverImageLocalPath = req.files.coverImage[0]?.buffer
     }
 
     if (!avatarLocalPath) {
