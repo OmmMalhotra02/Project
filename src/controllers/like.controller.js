@@ -94,6 +94,7 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
 
 const toggleTweetLike = asyncHandler(async (req, res) => {
     const { tweetId } = req.params
+    const userId = req.user?._id
     if (!tweetId) {
         throw new ApiError(400, "Invalid tweet ID");
     }

@@ -4,26 +4,19 @@ import cookieParser from 'cookie-parser'
 
 const app = express()
 
-const allowedOrigins = [
-  'https://vision-stream.vercel.app', // production frontend
-  /^http:\/\/localhost:(5173|5174)$/    // local dev            
-];
-
 app.use(cors({
-  origin: function(origin, callback){
-    if(!origin) return callback(null, true); // allow Postman or curl
-    const allowed = allowedOrigins.some(o => {
-      if(o instanceof RegExp) return o.test(origin);
-      return o === origin;
-    });
-    if(!allowed) return callback(new Error('CORS not allowed from this origin'), false);
-    return callback(null, true);
-  },
-  credentials: true
+  origin: [
+    "https://vision-stream.vercel.app",
+    "http://localhost:5173",
+    "http://localhost:5174"
+  ],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
 app.use((req, res, next) => {
-  res.header("Vary", "Origin");
+  res.setHeader("Vary", "Origin");
   next();
 });
 
@@ -34,6 +27,8 @@ app.use(express.urlencoded({extended: true, limit: "16kb"}))
 app.use(express.static("public"))
 
 app.use(cookieParser())
+
+app.options("*", cors());
 
 //routes import
 import userRouter from './routes/user.routes.js'
@@ -65,6 +60,14 @@ res.send('Servers survived 😈 Vision Stream Backend is live and ready. No bugs
 
 // Global Error Handling Middleware
 app.use((err, req, res, next) => {
+
+  if (err.message?.includes("CORS")) {
+    return res.status(403).json({
+      success: false,
+      message: "CORS error: origin not allowed",
+    });
+  }
+
   const statusCode = err.statusCode || 500
   const message = err.message || "Internal Server Error"
   const errors = err.errors || []

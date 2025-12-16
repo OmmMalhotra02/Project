@@ -157,7 +157,9 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const options = {
         httpOnly: true,
-        secure: true
+        secure: true, // REQUIRED on Vercel
+        sameSite: "None", // REQUIRED for cross-site
+        path: "/"
     }
 
     return res.
@@ -194,7 +196,9 @@ const logoutUser = asyncHandler(async (req, res) => {
 
     const options = {
         httpOnly: true,
-        secure: true
+        secure: true,
+        sameSite: "None",
+        path: "/"
     }
 
     return res.
@@ -230,9 +234,11 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user)
 
         const options = {
-            httpOnly: true,
-            secure: true
-        }
+        httpOnly: true,
+        secure: true, 
+        sameSite: "None",
+        path: "/"
+    }
 
         return res.
             status(200)
