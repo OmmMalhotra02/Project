@@ -28,7 +28,7 @@ const app = express()
 app.use(cors());
 // app.options("*", cors(corsOptions));
 
-app.use((req, res, next) => {
+app.use((req, res, next) => { 
   res.setHeader("Vary", "Origin");
   next();
 });
