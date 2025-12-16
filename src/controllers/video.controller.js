@@ -147,17 +147,19 @@ const publishAVideo = asyncHandler(async (req, res) => {
 
     const currentUser = req.user?._id
 
+    console.log("Received files:", req.files);
+
     // console.log("req.files:", req.files);
 
-    const videoFileLocalPath = req.files?.videoFile[0]?.path
-    const thumbnailLocalPath = req.files?.thumbnail[0]?.path
+    const videoFileLocalPath = req.files?.videoFile[0]?.buffer
+    const thumbnailLocalPath = req.files?.thumbnail[0]?.buffer
 
     if (!videoFileLocalPath || !thumbnailLocalPath) {
         throw new ApiError(501, "Video file or thumbnail file path not found")
     }
 
-    const videoFile = await uploadOnCloudinary(videoFileLocalPath)
-    const thumbnail = await uploadOnCloudinary(thumbnailLocalPath)
+    const videoFile = await uploadOnCloudinary(videoFileLocalPath, "video")
+    const thumbnail = await uploadOnCloudinary(thumbnailLocalPath, "image")
 
     if (!videoFile?.url || !thumbnail?.url) {
         throw new ApiError(500, "Cloudinary upload failed");
