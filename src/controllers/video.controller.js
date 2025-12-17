@@ -202,6 +202,23 @@ const getVideoById = asyncHandler(async (req, res) => {
         throw new ApiError("Video Id not received")
     }
 
+    // updating watch history for user
+    await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $addToSet: {watchHistory: videoId}
+        }
+    )
+
+    // update views
+    await Video.findByIdAndUpdate(
+        videoId,
+        {
+            $inc: {views: 1},
+        },
+        {new: false}
+    )
+
     const video = await Video.aggregate([
         {
             $match: {
