@@ -1,6 +1,7 @@
 import mongoose from "mongoose"
 import { Video } from "../models/video.models.js"
 import { Subscription } from "../models/subscription.models.js"
+import { Comment } from "../models/comment.models.js"
 import { Like } from "../models/like.models.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
@@ -70,6 +71,27 @@ const getChannelStats = asyncHandler(async (req, res) => {
         );
     }
 
+    const totalComments = await Comment.aggregate([
+        {
+            $lookup: {
+                from: "videos",
+                localField: "video",
+                foreignField: "_id",
+                as: "videoData"
+            }
+        },
+        {$unwind: "$videoData"},
+        {
+            $match: {"videoData.owner": userId}
+        },
+        {
+            $count: "total"
+        }
+
+    ])
+
+    const totalCommentsCount = totalComments[0]?.total || 0;
+
     const totalViews = await Video.aggregate([
         {
             $match: { owner: userId }
@@ -98,6 +120,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
                 totalVideoLikes,
                 totalTweetLikes,
                 totalCommentLikes,
+                totalCommentsCount,
                 totalViews: totalViews[0]?.totalViews || 0,
             },
             "Channel stats fetched successfully"
