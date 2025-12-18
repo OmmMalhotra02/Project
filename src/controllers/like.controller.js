@@ -126,10 +126,38 @@ const getLikedVideos = asyncHandler(async (req, res) => {
 
     const userId = req.user._id;
 
-    const likedVideo = await Like.find({
-        likedBy: userId,
-        video: { $exists: true }
-    }).populate("video", "_id, title, url")
+    const likedVideo = await Like.aggregate([
+        {
+            $lookup: {
+                from: "videos",
+                localField: "video",
+                foreignField: "_id",
+                as: "likedVideosData",
+                pipeline: [
+                    {
+                        $lookup: {
+                            from: "users",
+                            localField: "owner",
+                            foreignField: "_id",
+                            as: "videoOwner",
+                            pipeline: [
+                                {
+                                    $project: {
+                                        fullName: 1,
+                                        username: 1,
+                                        avatar: 1
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+        },
+        {
+            $unwind: "$likedVideosData"
+        }
+    ])
 
     return res
         .status(200)
